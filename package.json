@@ -1,7 +1,7 @@
 {
-    "name": "vscode-vendor-warning",
-    "displayName": "vendor warning",
-    "description": "Show a warning message when switching to a file under vendor/node_modules/outside the workspace",
+    "name": "vscode-paths-warning",
+    "displayName": "paths warning",
+    "description": "Show a warning message when opening a file under (vendor/node_modules/outside the workspace)",
     "version": "0.0.1",
     "publisher": "ctf0",
     "repository": "https://github.com/ctf0/vscode-paths-warning",
