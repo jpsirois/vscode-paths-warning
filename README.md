@@ -12,7 +12,6 @@ Show a warning message when switching to a file
     "statusBar.background": "#f3002b50",
 },
 "paths_warning.exclude": [
-    ".vscode",
-    "Code - Insiders"
+    "Code - Insiders",
 ]
 ```

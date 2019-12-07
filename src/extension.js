@@ -24,24 +24,40 @@ function getConfig() {
 }
 
 function showWarningMessageIfNeeded() {
+    const root = vscode.workspace.rootPath
+    const doc = vscode.window.activeTextEditor.document
     let msg = null
-    let exclude = getConfig().exclude
-    let root = vscode.workspace.rootPath
-    let fileName = vscode.window.activeTextEditor.document.fileName
+    let fileName = doc.fileName
 
-    if (fileName.startsWith(`${root}/vendor`)) {
-        msg = 'A Vendor'
-    } else if (fileName.startsWith(`${root}/node_modules`)) {
-        msg = 'A Node Modules'
-    } else if (!fileName.startsWith(`${root}`) && !exclude.some((el) => fileName.includes(el))) {
-        msg = 'An External'
+    if (getConfig().debug) {
+        console.table({
+            root: root,
+            name: fileName
+        })
     }
 
-    if (msg) {
-        vscode.window.showWarningMessage(`WARNING: You\'re Viewing ${msg} File!`)
+    // make sure its "a file" not "a panel or Untitled"
+    if (!doc.isUntitled && fileName.includes('/')) {
+        if (fileName.startsWith(`${root}/vendor`)) {
+            msg = 'A Vendor'
+        } else if (fileName.startsWith(`${root}/node_modules`)) {
+            msg = 'A Node Modules'
+        } else if (!fileName.startsWith(`${root}`) && !checkForExclusions(fileName)) {
+            msg = 'An External'
+        }
+
+        if (msg) {
+            vscode.window.showWarningMessage(`WARNING: You\'re Viewing ${msg} File!`)
+        }
     }
 
     applyStyles(msg)
+}
+
+function checkForExclusions(fileName) {
+    let exclude = getConfig().exclude
+
+    return exclude.some((el) => fileName.includes(el))
 }
 
 function applyStyles(add = true) {
