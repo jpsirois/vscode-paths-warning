@@ -25,9 +25,8 @@ function getConfig() {
 
 function showWarningMessageIfNeeded() {
     const root = vscode.workspace.rootPath
-    const doc = vscode.window.activeTextEditor.document
     let msg = null
-    let fileName = doc.fileName
+    let fileName = vscode.window.activeTextEditor.document.fileName
 
     if (getConfig().debug) {
         console.table({
@@ -37,7 +36,7 @@ function showWarningMessageIfNeeded() {
     }
 
     // make sure its "a file" not "a panel or Untitled"
-    if (!doc.isUntitled && fileName.includes('/')) {
+    if (fileName.includes('/')) {
         if (fileName.startsWith(`${root}/vendor`)) {
             msg = 'A Vendor'
         } else if (fileName.startsWith(`${root}/node_modules`)) {
