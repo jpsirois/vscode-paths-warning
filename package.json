@@ -29,8 +29,9 @@
                 "paths_warning.exclude": {
                     "type": "array",
                     "default": [
-                        ".vscode",
-                        "Code - Insiders"
+                        "Code - Insiders",
+                        "Untitled",
+                        "extension-output"
                     ],
                     "uniqueItems": true,
                     "description": "dont apply styles when opening a file with a path contains any of"
