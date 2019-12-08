@@ -1,8 +1,4 @@
-Show a warning message when switching to a file
-
-- under root/vendor
-- under root/node_modules
-- outside of the workspace
+Show a warning message when switching to a file under any of `workspace-root/paths_warning.include` or outside of the workspace.
 
 ## Config
 
@@ -11,6 +7,10 @@ Show a warning message when switching to a file
     "activityBar.background": "#f3002b50",
     "statusBar.background": "#f3002b50",
 },
+"paths_warning.include": [
+    "vendor",
+    "node_modules"
+],
 "paths_warning.exclude": [
     "Code - Insiders",
 ]

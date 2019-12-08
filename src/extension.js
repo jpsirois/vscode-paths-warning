@@ -28,6 +28,7 @@ function showWarningMessageIfNeeded() {
     let msg = null
     let fileName = vscode.window.activeTextEditor.document.fileName
 
+    // debug
     if (getConfig().debug) {
         console.table({
             root: root,
@@ -35,18 +36,23 @@ function showWarningMessageIfNeeded() {
         })
     }
 
-    // make sure its "a file" not "a panel or Untitled"
+    // make sure its "a file" not "a Panel or Untitled"
     if (fileName.includes('/')) {
-        if (fileName.startsWith(`${root}/vendor`)) {
-            msg = 'A Vendor'
-        } else if (fileName.startsWith(`${root}/node_modules`)) {
-            msg = 'A Node Modules'
-        } else if (!fileName.startsWith(`${root}`) && !checkForExclusions(fileName)) {
+        // include
+        for (const warn of getConfig().include) {
+            if (fileName.startsWith(`${root}/${warn}`)) {
+                msg = warn
+            }
+        }
+
+        // exclude
+        if (!fileName.startsWith(`${root}`) && !checkForExclusions(fileName)) {
             msg = 'An External'
         }
 
+        // show warning
         if (msg) {
-            vscode.window.showWarningMessage(`WARNING: You\'re Viewing ${msg} File!`)
+            vscode.window.showWarningMessage(`WARNING: You\'re Viewing A File Under "${msg}" !`)
         }
     }
 

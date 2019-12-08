@@ -8,3 +8,7 @@
 
 - better checking
 - add debug option
+
+## 0.0.3
+
+- option for includes
