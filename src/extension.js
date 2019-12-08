@@ -6,12 +6,6 @@ function activate(context) {
         showWarningMessageIfNeeded()
     }
 
-    // vscode.window.onDidChangeWindowState((editor) => {
-    //     if (editor && editor.focused) {
-    //         showWarningMessageIfNeeded()
-    //     }
-    // }, null, context.subscriptions)
-
     vscode.window.onDidChangeActiveTextEditor((editor) => {
         editor
             ? showWarningMessageIfNeeded()
@@ -47,12 +41,12 @@ function showWarningMessageIfNeeded() {
 
         // exclude
         if (!fileName.startsWith(`${root}`) && !checkForExclusions(fileName)) {
-            msg = 'An External'
+            msg = 'External Path'
         }
 
         // show warning
         if (msg) {
-            vscode.window.showWarningMessage(`WARNING: You\'re Viewing A File Under "${msg}" !`)
+            vscode.window.showWarningMessage(`WARNING: You\'re Viewing A File From "${msg}" !`)
         }
     }
 
