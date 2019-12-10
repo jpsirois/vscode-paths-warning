@@ -12,3 +12,7 @@
 ## 0.0.3
 
 - option for includes
+
+## 0.0.4
+
+- optimize the styles appling

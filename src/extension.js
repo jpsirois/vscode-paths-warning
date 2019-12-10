@@ -1,26 +1,31 @@
 const vscode = require('vscode')
+const debounce = require('lodash.debounce')
 
-function activate(context) {
+function activate() {
+    // currently opened file
     let activeEditor = vscode.window.activeTextEditor
     if (activeEditor) {
-        showWarningMessageIfNeeded()
+        showMessage(activeEditor)
     }
 
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-        editor
-            ? showWarningMessageIfNeeded()
-            : applyStyles(false)
-    }, null, context.subscriptions)
+    // when files is changed or closed
+    vscode.window.onDidChangeActiveTextEditor(
+        debounce(function (editor) {
+            editor
+                ? showMessage(editor)
+                : applyStyles(false)
+        }, 150)
+    )
 }
 
 function getConfig() {
     return vscode.workspace.getConfiguration('paths_warning')
 }
 
-function showWarningMessageIfNeeded() {
-    const root = vscode.workspace.rootPath
+function showMessage(editor) {
     let msg = null
-    let fileName = vscode.window.activeTextEditor.document.fileName
+    const root = vscode.workspace.rootPath
+    const fileName = editor.document.fileName
 
     // debug
     if (getConfig().debug) {
@@ -33,9 +38,9 @@ function showWarningMessageIfNeeded() {
     // make sure its "a file" not "a Panel or Untitled"
     if (fileName.includes('/')) {
         // include
-        for (const warn of getConfig().include) {
-            if (fileName.startsWith(`${root}/${warn}`)) {
-                msg = warn
+        for (const incName of getConfig().include) {
+            if (fileName.startsWith(`${root}/${incName}`)) {
+                msg = incName
             }
         }
 
@@ -50,7 +55,7 @@ function showWarningMessageIfNeeded() {
         }
     }
 
-    applyStyles(msg)
+    applyStyles(!!(msg))
 }
 
 function checkForExclusions(fileName) {
@@ -67,21 +72,27 @@ function applyStyles(add = true) {
 
     if (styles) {
         if (add) {
-            let data = Object.assign(current, styles)
-
-            return config.update(colorsConfig, data, true)
+            if (!hasAppliedStyles(current, styles)) {
+                return config.update(colorsConfig, Object.assign(current, styles), true)
+            }
         } else {
-            const difference = Object.keys(current)
-                .filter((key) => !Object.keys(styles).includes(key))
-                .reduce((obj, key) => {
-                    obj[key] = current[key]
-
-                    return obj
-                }, {})
-
-            return config.update(colorsConfig, difference, true)
+            return config.update(colorsConfig, getDiffProps(current, styles), true)
         }
     }
+}
+
+function hasAppliedStyles(current, styles) {
+    return Object.keys(styles).filter((key) => Object.keys(current).includes(key)).length
+}
+
+function getDiffProps(current, styles) {
+    return Object.keys(current)
+        .filter((key) => !Object.keys(styles).includes(key))
+        .reduce((obj, key) => {
+            obj[key] = current[key]
+
+            return obj
+        }, {})
 }
 
 exports.activate = activate
