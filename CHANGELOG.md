@@ -15,4 +15,4 @@
 
 ## 0.0.4
 
-- optimize the styles appling
+- optimize the styles applying
