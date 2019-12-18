@@ -16,3 +16,8 @@
 ## 0.0.4
 
 - optimize the styles applying
+
+## 0.0.5
+
+- fix changing the editor content for no reason 👀
+- add update on config change

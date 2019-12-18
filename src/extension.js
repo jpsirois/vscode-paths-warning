@@ -16,6 +16,14 @@ function activate() {
                 : applyStyles(false)
         }, 150)
     )
+
+    vscode.workspace.onDidChangeConfiguration((e) => {
+        let activeEditor = vscode.window.activeTextEditor
+
+        if (e.affectsConfiguration('paths_warning.exclude') && activeEditor) {
+            showMessage(activeEditor)
+        }
+    })
 }
 
 function getConfig() {
@@ -58,34 +66,38 @@ function showMessage(editor) {
     applyStyles(!!(msg))
 }
 
-function checkForExclusions(fileName) {
-    let exclude = getConfig().exclude
+async function checkForExclusions(fileName) {
+    let exclude = await getConfig().exclude
 
     return exclude.some((el) => fileName.includes(el))
 }
 
-function applyStyles(add = true) {
+async function applyStyles(add = true) {
     let colorsConfig = 'workbench.colorCustomizations'
-    let styles = getConfig().styles
+    let styles = await getConfig().styles
     let config = vscode.workspace.getConfiguration()
-    let current = config.get(colorsConfig)
+    let current = await config.get(colorsConfig)
 
     if (styles) {
         if (add) {
-            if (!hasAppliedStyles(current, styles)) {
+            let check = await hasAppliedStyles(current, styles)
+
+            if (!check) {
                 return config.update(colorsConfig, Object.assign(current, styles), true)
             }
         } else {
-            return config.update(colorsConfig, getDiffProps(current, styles), true)
+            let diff = await getDiffProps(current, styles)
+
+            return config.update(colorsConfig, diff, true)
         }
     }
 }
 
-function hasAppliedStyles(current, styles) {
+async function hasAppliedStyles(current, styles) {
     return Object.keys(styles).filter((key) => Object.keys(current).includes(key)).length
 }
 
-function getDiffProps(current, styles) {
+async function getDiffProps(current, styles) {
     return Object.keys(current)
         .filter((key) => !Object.keys(styles).includes(key))
         .reduce((obj, key) => {
