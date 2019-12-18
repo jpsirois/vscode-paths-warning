@@ -81,13 +81,15 @@ async function applyStyles(add = true) {
     let current = await config.get(colorsConfig)
 
     if (styles) {
-        if (add) {
-            let check = await hasAppliedStyles(current, styles)
+        let check = await hasAppliedStyles(current, styles)
 
-            if (!check) {
-                return config.update(colorsConfig, Object.assign(current, styles), true)
-            }
-        } else {
+        if (add && !check) {
+            let data = Object.assign(current, styles)
+
+            return config.update(colorsConfig, data, true)
+        }
+
+        if (!add && check) {
             let diff = await getDiffProps(current, styles)
 
             return config.update(colorsConfig, diff, true)
@@ -99,14 +101,18 @@ async function hasAppliedStyles(current, styles) {
     return Object.keys(styles).filter((key) => Object.keys(current).includes(key)).length
 }
 
-async function getDiffProps(current, styles) {
-    return Object.keys(current)
-        .filter((key) => !Object.keys(styles).includes(key))
-        .reduce((obj, key) => {
-            obj[key] = current[key]
+function getDiffProps(current, styles) {
+    return new Promise((resolve) => {
+        let data = Object.keys(current)
+            .filter((key) => !Object.keys(styles).includes(key))
+            .reduce((obj, key) => {
+                obj[key] = current[key]
 
-            return obj
-        }, {})
+                return obj
+            }, {})
+
+        resolve(data)
+    }).then((data) => data)
 }
 
 exports.activate = activate
