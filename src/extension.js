@@ -30,7 +30,7 @@ function getConfig() {
     return vscode.workspace.getConfiguration('paths_warning')
 }
 
-function showMessage(editor) {
+async function showMessage(editor) {
     let msg = null
     const root = vscode.workspace.rootPath
     const fileName = editor.document.fileName
@@ -53,13 +53,15 @@ function showMessage(editor) {
         }
 
         // exclude
-        if (!fileName.startsWith(`${root}`) && !checkForExclusions(fileName)) {
+        let exclude = await checkForExclusions(fileName)
+
+        if (!fileName.startsWith(root) && !exclude) {
             msg = 'External Path'
         }
 
         // show warning
         if (msg) {
-            vscode.window.showWarningMessage(`WARNING: You\'re Viewing A File From "${msg}" !`)
+            vscode.window.showWarningMessage(`WARNING: You're Viewing A File From "${msg}" !`)
         }
     }
 

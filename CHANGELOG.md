@@ -21,3 +21,7 @@
 
 - fix changing the editor content for no reason 👀
 - add update on config change
+
+## 0.0.6
+
+- typo 😥
