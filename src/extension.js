@@ -3,8 +3,8 @@ const debounce = require('lodash.debounce')
 
 let styles = []
 
-async function activate() {
-    styles = await getConfig().styles
+function activate() {
+    readConfig()
 
     // currently opened file
     let activeEditor = vscode.window.activeTextEditor
@@ -29,13 +29,17 @@ async function activate() {
         }
 
         if (e.affectsConfiguration('paths_warning.styles')) {
-            styles = getConfig().styles
+            readConfig()
         }
     })
 }
 
 function getConfig() {
     return vscode.workspace.getConfiguration('paths_warning')
+}
+
+async function readConfig() {
+    styles = await getConfig().styles
 }
 
 async function showMessage(editor) {
