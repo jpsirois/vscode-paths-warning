@@ -1,12 +1,16 @@
 const vscode = require('vscode')
 const debounce = require('lodash.debounce')
 
-function activate() {
+let styles = []
+
+async function activate() {
+    styles = await getConfig().styles
+
     // currently opened file
     let activeEditor = vscode.window.activeTextEditor
-    if (activeEditor) {
-        showMessage(activeEditor)
-    }
+    activeEditor
+        ? showMessage(activeEditor)
+        : applyStyles(false)
 
     // when files is changed or closed
     vscode.window.onDidChangeActiveTextEditor(
@@ -22,6 +26,10 @@ function activate() {
 
         if (e.affectsConfiguration('paths_warning.exclude') && activeEditor) {
             showMessage(activeEditor)
+        }
+
+        if (e.affectsConfiguration('paths_warning.styles')) {
+            styles = getConfig().styles
         }
     })
 }
@@ -76,12 +84,11 @@ async function checkForExclusions(fileName) {
 
 async function applyStyles(add = true) {
     let colorsConfig = 'workbench.colorCustomizations'
-    let styles = await getConfig().styles
     let config = vscode.workspace.getConfiguration()
     let current = await config.get(colorsConfig)
 
     if (styles) {
-        let check = await hasAppliedStyles(current, styles)
+        let check = hasAppliedStyles(current, styles)
 
         if (add && !check) {
             let data = Object.assign(current, styles)
@@ -97,8 +104,8 @@ async function applyStyles(add = true) {
     }
 }
 
-async function hasAppliedStyles(current, styles) {
-    return Object.keys(styles).filter((key) => Object.keys(current).includes(key)).length
+function hasAppliedStyles(current, styles) {
+    return Object.keys(styles).some((key) => Object.keys(current).includes(key))
 }
 
 function getDiffProps(current, styles) {
