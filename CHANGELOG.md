@@ -25,3 +25,7 @@
 ## 0.0.6
 
 - typo 😥
+
+## 0.0.8
+
+- small corrections
