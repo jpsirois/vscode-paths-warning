@@ -29,3 +29,7 @@
 ## 0.0.8
 
 - small corrections
+
+## 0.0.9
+
+- account for window change too

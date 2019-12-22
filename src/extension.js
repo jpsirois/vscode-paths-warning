@@ -1,79 +1,96 @@
 const vscode = require('vscode')
 const debounce = require('lodash.debounce')
 
-let styles = []
+const COLORS_CONFIG = 'workbench.colorCustomizations'
+const PACKAGE_NAME = 'paths_warning'
 
-function activate() {
-    readConfig()
+let config = {}
+let currentStyles = []
+
+async function activate() {
+    await readConfig()
 
     // currently opened file
     let activeEditor = vscode.window.activeTextEditor
-    activeEditor
-        ? showMessage(activeEditor)
-        : applyStyles(false)
+    checkForEditor(activeEditor)
 
-    // when files is changed or closed
-    vscode.window.onDidChangeActiveTextEditor(
-        debounce(function (editor) {
-            editor
-                ? showMessage(editor)
-                : applyStyles(false)
+    // on window change
+    vscode.window.onDidChangeWindowState(
+        debounce(function (e) {
+            if (e.focused) {
+                let editor = vscode.window.activeTextEditor
+                checkForEditor(editor)
+            }
         }, 150)
     )
 
-    vscode.workspace.onDidChangeConfiguration((e) => {
-        let activeEditor = vscode.window.activeTextEditor
+    // on file change/close
+    vscode.window.onDidChangeActiveTextEditor(
+        debounce(function (editor) {
+            checkForEditor(editor)
+        }, 150)
+    )
 
-        if (e.affectsConfiguration('paths_warning.exclude') && activeEditor) {
-            showMessage(activeEditor)
+    // on config change
+    vscode.workspace.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration(`${PACKAGE_NAME}.exclude`)) {
+            checkForEditor(vscode.window.activeTextEditor)
         }
 
-        if (e.affectsConfiguration('paths_warning.styles')) {
+        if (e.affectsConfiguration(`${PACKAGE_NAME}.styles`) || e.affectsConfiguration(COLORS_CONFIG)) {
             readConfig()
         }
     })
 }
 
-function getConfig() {
-    return vscode.workspace.getConfiguration('paths_warning')
+function getConfig(key = null) {
+    return vscode.workspace.getConfiguration(key)
 }
 
 async function readConfig() {
-    styles = await getConfig().styles
+    config = await getConfig(PACKAGE_NAME)
+    updateCurrentStyles()
 }
 
-async function showMessage(editor) {
+async function updateCurrentStyles(data) {
+    currentStyles = data || await getConfig(COLORS_CONFIG)
+}
+
+async function checkForEditor(editor) {
     let msg = null
-    const root = vscode.workspace.rootPath
-    const fileName = editor.document.fileName
 
-    // debug
-    if (getConfig().debug) {
-        console.table({
-            root: root,
-            name: fileName
-        })
-    }
+    if (editor) {
+        const root = vscode.workspace.rootPath
+        const fileName = editor.document.fileName
 
-    // make sure its "a file" not "a Panel or Untitled"
-    if (fileName.includes('/')) {
-        // include
-        for (const incName of getConfig().include) {
-            if (fileName.startsWith(`${root}/${incName}`)) {
-                msg = incName
+        // debug
+        if (config.debug) {
+            console.table({
+                root: root,
+                name: fileName
+            })
+        }
+
+        // make sure its "a file" not "a Panel or Untitled"
+        if (fileName.includes('/')) {
+            // include
+            for (const incName of config.include) {
+                if (fileName.startsWith(`${root}/${incName}`)) {
+                    msg = incName
+                }
             }
-        }
 
-        // exclude
-        let exclude = await checkForExclusions(fileName)
+            // exclude
+            let exclude = await checkForExclusions(fileName)
 
-        if (!fileName.startsWith(root) && !exclude) {
-            msg = 'External Path'
-        }
+            if (!fileName.startsWith(root) && !exclude) {
+                msg = 'External Path'
+            }
 
-        // show warning
-        if (msg) {
-            vscode.window.showWarningMessage(`WARNING: You're Viewing A File From "${msg}" !`)
+            // show warning
+            if (msg) {
+                vscode.window.showWarningMessage(`WARNING: You're Viewing A File From "${msg}" !`)
+            }
         }
     }
 
@@ -81,43 +98,40 @@ async function showMessage(editor) {
 }
 
 async function checkForExclusions(fileName) {
-    let exclude = await getConfig().exclude
+    let exclude = await config.exclude
 
     return exclude.some((el) => fileName.includes(el))
 }
 
 async function applyStyles(add = true) {
-    let colorsConfig = 'workbench.colorCustomizations'
-    let config = vscode.workspace.getConfiguration()
-    let current = await config.get(colorsConfig)
-
-    if (styles) {
-        let check = hasAppliedStyles(current, styles)
+    if (config.styles) {
+        let check = hasAppliedStyles()
 
         if (add && !check) {
-            let data = Object.assign(current, styles)
+            let data = Object.assign({}, currentStyles, config.styles)
 
-            return config.update(colorsConfig, data, true)
+            return getConfig().update(COLORS_CONFIG, data, true)
         }
 
         if (!add && check) {
-            let diff = await getDiffProps(current, styles)
+            let diff = await getDiffProps()
+            getConfig().update(COLORS_CONFIG, diff, true)
 
-            return config.update(colorsConfig, diff, true)
+            return updateCurrentStyles(diff)
         }
     }
 }
 
-function hasAppliedStyles(current, styles) {
-    return Object.keys(styles).some((key) => Object.keys(current).includes(key))
+function hasAppliedStyles() {
+    return Object.keys(config.styles).some((key) => Object.keys(currentStyles).includes(key))
 }
 
-function getDiffProps(current, styles) {
+function getDiffProps() {
     return new Promise((resolve) => {
-        let data = Object.keys(current)
-            .filter((key) => !Object.keys(styles).includes(key))
+        let data = Object.keys(currentStyles)
+            .filter((key) => !Object.keys(config.styles).includes(key))
             .reduce((obj, key) => {
-                obj[key] = current[key]
+                obj[key] = currentStyles[key]
 
                 return obj
             }, {})
