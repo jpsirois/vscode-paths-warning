@@ -46,7 +46,7 @@
                 "paths_warning.debug": {
                     "type": "boolean",
                     "default": false,
-                    "description": "use this to get filename in console (check dev tools)"
+                    "description": "use this to get filename in output"
                 }
             }
         }

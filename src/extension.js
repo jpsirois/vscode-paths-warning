@@ -6,9 +6,11 @@ const PACKAGE_NAME = 'paths_warning'
 
 let config = {}
 let currentStyles = []
+let outputChannel
 
 async function activate() {
-    await readConfig()
+    readConfig()
+    resetOutputChannel()
 
     // currently opened file
     let activeEditor = vscode.window.activeTextEditor
@@ -40,15 +42,36 @@ async function activate() {
         if (e.affectsConfiguration(`${PACKAGE_NAME}.styles`) || e.affectsConfiguration(COLORS_CONFIG)) {
             readConfig()
         }
+
+        if (e.affectsConfiguration(`${PACKAGE_NAME}.debug`)) {
+            resetOutputChannel()
+        }
     })
+}
+
+function showDebugMsg(text) {
+    if (outputChannel) {
+        outputChannel.appendLine(text)
+    }
+}
+
+function resetOutputChannel() {
+    if (outputChannel) {
+        outputChannel.dispose()
+        outputChannel = undefined
+    }
+
+    if (config.debug) {
+        outputChannel = vscode.window.createOutputChannel("Paths Warning")
+    }
 }
 
 function getConfig(key = null) {
     return vscode.workspace.getConfiguration(key)
 }
 
-async function readConfig() {
-    config = await getConfig(PACKAGE_NAME)
+function readConfig() {
+    config = getConfig(PACKAGE_NAME)
     updateCurrentStyles()
 }
 
@@ -60,15 +83,15 @@ async function checkForEditor(editor) {
     let msg = null
 
     if (editor) {
-        const root = vscode.workspace.rootPath
+        const root = vscode.workspace.rootPath || ''
         const fileName = editor.document.fileName
 
         // debug
         if (config.debug) {
-            console.table({
-                root: root,
-                name: fileName
-            })
+            // outputChannel.clear()
+            showDebugMsg(`root: ${root}`)
+            showDebugMsg(`name: ${fileName}`)
+            showDebugMsg('--------------------')
         }
 
         // make sure its "a file" not "a Panel or Untitled"
