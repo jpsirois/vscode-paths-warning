@@ -5,42 +5,39 @@ const COLORS_CONFIG = 'workbench.colorCustomizations'
 const PACKAGE_NAME = 'paths_warning'
 
 let config = {}
-let currentStyles = []
 let outputChannel
 
 async function activate() {
-    readConfig()
+    await readConfig()
     resetOutputChannel()
 
     // currently opened file
-    let activeEditor = vscode.window.activeTextEditor
-    checkForEditor(activeEditor)
+    await checkForEditor()
 
     // on window change
     vscode.window.onDidChangeWindowState(
-        debounce(function (e) {
+        debounce(async function (e) {
             if (e.focused) {
-                let editor = vscode.window.activeTextEditor
-                checkForEditor(editor)
+                await checkForEditor()
             }
         }, 150)
     )
 
     // on file change/close
     vscode.window.onDidChangeActiveTextEditor(
-        debounce(function (editor) {
-            checkForEditor(editor)
+        debounce(async function (editor) {
+            await checkForEditor(editor)
         }, 150)
     )
 
     // on config change
-    vscode.workspace.onDidChangeConfiguration((e) => {
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
         if (e.affectsConfiguration(`${PACKAGE_NAME}.exclude`)) {
-            checkForEditor(vscode.window.activeTextEditor)
+            await checkForEditor()
         }
 
-        if (e.affectsConfiguration(`${PACKAGE_NAME}.styles`) || e.affectsConfiguration(COLORS_CONFIG)) {
-            readConfig()
+        if (e.affectsConfiguration(`${PACKAGE_NAME}.styles`)) {
+            await readConfig()
         }
 
         if (e.affectsConfiguration(`${PACKAGE_NAME}.debug`)) {
@@ -49,6 +46,7 @@ async function activate() {
     })
 }
 
+/* ---------------------------------- debug --------------------------------- */
 function showDebugMsg(text) {
     if (outputChannel) {
         outputChannel.appendLine(text)
@@ -66,25 +64,25 @@ function resetOutputChannel() {
     }
 }
 
-function getConfig(key = null) {
+/* --------------------------------- config --------------------------------- */
+async function getConfig(key = null) {
     return vscode.workspace.getConfiguration(key)
 }
 
-function readConfig() {
-    config = getConfig(PACKAGE_NAME)
-    updateCurrentStyles()
+async function readConfig() {
+    return config = await getConfig(PACKAGE_NAME)
 }
 
-async function updateCurrentStyles(data) {
-    currentStyles = data || await getConfig(COLORS_CONFIG)
+async function getCurrentStyles() {
+    return getConfig(COLORS_CONFIG)
 }
 
-async function checkForEditor(editor) {
+async function checkForEditor(editor = vscode.window.activeTextEditor) {
     let msg = null
 
     if (editor) {
         const root = vscode.workspace.rootPath || ''
-        const fileName = editor.document.fileName
+        const { fileName } = editor.document
 
         // debug
         if (config.debug) {
@@ -100,56 +98,41 @@ async function checkForEditor(editor) {
             for (const incName of config.include) {
                 if (fileName.startsWith(`${root}/${incName}`)) {
                     msg = incName
+                    break
                 }
             }
 
             // exclude
-            let exclude = await checkForExclusions(fileName)
-
-            if (!fileName.startsWith(root) && !exclude) {
+            if (!fileName.startsWith(root) && !checkForExclusions(fileName)) {
                 msg = 'External Path'
-            }
-
-            // show warning
-            if (msg) {
-                vscode.window.showWarningMessage(`WARNING: You're Viewing A File From "${msg}" !`)
             }
         }
     }
 
-    applyStyles(!!(msg))
+    // show warning
+    if (msg) {
+        vscode.window.showWarningMessage(`WARNING: You're Viewing A File From "${msg}" !`)
+    }
+
+    return applyStyles(!!(msg))
 }
 
-async function checkForExclusions(fileName) {
-    let exclude = await config.exclude
+function checkForExclusions(fileName) {
+    let exclude = config.exclude
 
     return exclude.some((el) => fileName.includes(el))
 }
 
 async function applyStyles(add = true) {
-    if (config.styles) {
-        let check = hasAppliedStyles()
+    let currentStyles = await getCurrentStyles()
+    let data = add
+        ? Object.assign({}, currentStyles, config.styles)
+        : await getDiffProps(currentStyles)
 
-        if (add && !check) {
-            let data = Object.assign({}, currentStyles, config.styles)
-
-            return getConfig().update(COLORS_CONFIG, data, true)
-        }
-
-        if (!add && check) {
-            let diff = await getDiffProps()
-            getConfig().update(COLORS_CONFIG, diff, true)
-
-            return updateCurrentStyles(diff)
-        }
-    }
+    return vscode.workspace.getConfiguration().update(COLORS_CONFIG, data, true)
 }
 
-function hasAppliedStyles() {
-    return Object.keys(config.styles).some((key) => Object.keys(currentStyles).includes(key))
-}
-
-function getDiffProps() {
+function getDiffProps(currentStyles) {
     return new Promise((resolve) => {
         let data = Object.keys(currentStyles)
             .filter((key) => !Object.keys(config.styles).includes(key))
