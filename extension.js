@@ -170,7 +170,7 @@ async function showMsgWithProgress(msg) {
             } else {
                 await new Promise((resolve) => {
                     setTimeout(() => {
-                        progress.report({ increment: (10 * i) / 5 })
+                        progress.report({ increment: 10 })
                         resolve()
                     }, 1000)
                 })
