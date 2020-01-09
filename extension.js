@@ -3,6 +3,7 @@ const debounce = require('lodash.debounce')
 
 const COLORS_CONFIG = 'workbench.colorCustomizations'
 const PACKAGE_NAME = 'paths_warning'
+const stopEvent = new vscode.EventEmitter()
 
 let config = {}
 let outputChannel
@@ -19,6 +20,8 @@ async function activate() {
         debounce(async function (e) {
             if (e.focused) {
                 await checkForEditor()
+            } else {
+                stopEvent.fire()
             }
         }, 150)
     )
@@ -107,12 +110,14 @@ async function checkForEditor(editor = vscode.window.activeTextEditor) {
                 msg = 'External Path'
             }
         }
+    } else {
+        stopEvent.fire()
     }
 
     // show warning
-    if (msg) {
-        vscode.window.showWarningMessage(`WARNING: You're Viewing A File From "${msg}" !`)
-    }
+    msg
+        ? showMsgWithProgress(`WARNING: You're Viewing A File From "${msg}" !`)
+        : stopEvent.fire()
 
     return applyStyles(!!(msg))
 }
@@ -146,4 +151,43 @@ function getDiffProps(currentStyles) {
     }).then((data) => data)
 }
 
+async function showMsgWithProgress(msg) {
+    let stop = false
+
+    return vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: msg,
+        cancellable: true
+    }, async (progress, token) => {
+        for (let i = 1; i <= 11; i++) {
+            stopEvent.event((e) => {
+                stop = true
+            })
+
+            if (stop) {
+                await progress.report({ increment: 0 })
+                break
+            } else {
+                await new Promise((resolve) => {
+                    setTimeout(() => {
+                        progress.report({ increment: (10 * i) / 5 })
+                        resolve()
+                    }, 1000)
+                })
+            }
+        }
+
+        return new Promise((resolve) => resolve())
+    })
+}
+
 exports.activate = activate
+
+function deactivate() {
+    stopEvent.dispose()
+}
+
+module.exports = {
+    activate,
+    deactivate
+}

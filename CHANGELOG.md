@@ -33,3 +33,7 @@
 ## 0.0.9
 
 - account for window change too
+
+## 0.1.1
+
+- hide notification after timeout instead of permanent
