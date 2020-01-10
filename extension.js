@@ -7,7 +7,7 @@ const stopEvent = new vscode.EventEmitter()
 
 let config = {}
 let outputChannel
-let notifIsVisible = false
+let extFilesList = []
 
 async function activate() {
     await readConfig()
@@ -131,9 +131,14 @@ function checkForExclusions(fileName) {
 
 async function applyStyles(add = true) {
     let currentStyles = await getCurrentStyles()
-    let data = add
-        ? Object.assign({}, currentStyles, config.styles)
-        : await getDiffProps(currentStyles)
+    let data = {}
+
+    if (add) {
+        data = Object.assign({}, currentStyles, config.styles)
+    } else {
+        extFilesList = []
+        data = await getDiffProps(currentStyles)
+    }
 
     return vscode.workspace.getConfiguration().update(COLORS_CONFIG, data, true)
 }
@@ -152,24 +157,21 @@ function getDiffProps(currentStyles) {
     }).then((data) => data)
 }
 
-async function showMsgWithProgress(msg) {
+let showMsgWithProgress = debounce(function (msg) {
     let stop = false
 
-    if (!notifIsVisible) {
+    if (!hasNotif()) {
         return vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: msg,
             cancellable: true
         }, async (progress, token) => {
-            notifIsVisible = true
-
             for (let i = 1; i <= 11; i++) {
                 stopEvent.event((e) => {
                     stop = true
                 })
 
                 if (stop) {
-                    await progress.report({ increment: 0 })
                     break
                 } else {
                     await new Promise((resolve) => {
@@ -182,10 +184,25 @@ async function showMsgWithProgress(msg) {
             }
 
             return new Promise((resolve) => {
-                notifIsVisible = false
                 resolve()
             })
         })
+    }
+}, 1000)
+
+function hasNotif() {
+    try {
+        let check = false
+        let name = vscode.window.activeTextEditor.document.fileName
+
+        if (extFilesList.includes(name)) {
+            check = true
+        } else {
+            extFilesList.push(name)
+        }
+
+        return check
+    } catch (error) {
     }
 }
 
