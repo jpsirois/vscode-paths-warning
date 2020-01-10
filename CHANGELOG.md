@@ -37,3 +37,7 @@
 ## 0.1.1
 
 - hide notification after timeout instead of permanent
+
+## 0.1.2
+
+- fix double notifs

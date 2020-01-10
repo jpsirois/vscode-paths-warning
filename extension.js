@@ -7,6 +7,7 @@ const stopEvent = new vscode.EventEmitter()
 
 let config = {}
 let outputChannel
+let notifIsVisible = false
 
 async function activate() {
     await readConfig()
@@ -154,31 +155,38 @@ function getDiffProps(currentStyles) {
 async function showMsgWithProgress(msg) {
     let stop = false
 
-    return vscode.window.withProgress({
-        location: vscode.ProgressLocation.Notification,
-        title: msg,
-        cancellable: true
-    }, async (progress, token) => {
-        for (let i = 1; i <= 11; i++) {
-            stopEvent.event((e) => {
-                stop = true
-            })
+    if (!notifIsVisible) {
+        return vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: msg,
+            cancellable: true
+        }, async (progress, token) => {
+            notifIsVisible = true
 
-            if (stop) {
-                await progress.report({ increment: 0 })
-                break
-            } else {
-                await new Promise((resolve) => {
-                    setTimeout(() => {
-                        progress.report({ increment: 10 })
-                        resolve()
-                    }, 1000)
+            for (let i = 1; i <= 11; i++) {
+                stopEvent.event((e) => {
+                    stop = true
                 })
-            }
-        }
 
-        return new Promise((resolve) => resolve())
-    })
+                if (stop) {
+                    await progress.report({ increment: 0 })
+                    break
+                } else {
+                    await new Promise((resolve) => {
+                        setTimeout(() => {
+                            progress.report({ increment: 10 })
+                            resolve()
+                        }, 1000)
+                    })
+                }
+            }
+
+            return new Promise((resolve) => {
+                notifIsVisible = false
+                resolve()
+            })
+        })
+    }
 }
 
 exports.activate = activate
