@@ -65,6 +65,7 @@ function resetOutputChannel() {
 
     if (config.debug) {
         outputChannel = vscode.window.createOutputChannel("Paths Warning")
+        outputChannel.show(true)
     }
 }
 
@@ -84,43 +85,46 @@ async function getCurrentStyles() {
 async function checkForEditor(editor = vscode.window.activeTextEditor) {
     let msg = null
 
-    if (editor) {
-        const root = vscode.workspace.rootPath || ''
-        const { fileName } = editor.document
+    try {
+        if (editor) {
+            const root = vscode.workspace.workspaceFolders[0].uri.fsPath || ''
+            const { fileName } = editor.document
 
-        // debug
-        if (config.debug) {
-            // outputChannel.clear()
-            showDebugMsg(`root: ${root}`)
-            showDebugMsg(`name: ${fileName}`)
-            showDebugMsg('--------------------')
-        }
+            // debug
+            if (config.debug) {
+                // outputChannel.clear()
+                showDebugMsg(`root: ${root}`)
+                showDebugMsg(`name: ${fileName}`)
+                showDebugMsg('--------------------')
+            }
 
-        // make sure its "a file" not "a Panel or Untitled"
-        if (fileName.includes('/')) {
-            // include
-            for (const incName of config.include) {
-                if (fileName.startsWith(`${root}/${incName}`)) {
-                    msg = incName
-                    break
+            // make sure its "a file" not "a Panel or Untitled"
+            if (fileName.includes('/')) {
+                // include
+                for (const incName of config.include) {
+                    if (fileName.startsWith(`${root}/${incName}`)) {
+                        msg = incName
+                        break
+                    }
+                }
+
+                // exclude
+                if (!fileName.startsWith(root) && !checkForExclusions(fileName)) {
+                    msg = 'External Path'
                 }
             }
-
-            // exclude
-            if (!fileName.startsWith(root) && !checkForExclusions(fileName)) {
-                msg = 'External Path'
-            }
+        } else {
+            stopEvent.fire()
         }
-    } else {
-        stopEvent.fire()
+
+        // show warning
+        msg
+            ? showMsgWithProgress(`WARNING: You're Viewing A File From "${msg}" !`)
+            : stopEvent.fire()
+
+        return applyStyles(!!(msg))
+    } catch (error) {
     }
-
-    // show warning
-    msg
-        ? showMsgWithProgress(`WARNING: You're Viewing A File From "${msg}" !`)
-        : stopEvent.fire()
-
-    return applyStyles(!!(msg))
 }
 
 function checkForExclusions(fileName) {
@@ -183,9 +187,7 @@ let showMsgWithProgress = debounce(function (msg) {
                 }
             }
 
-            return new Promise((resolve) => {
-                resolve()
-            })
+            return new Promise((resolve) => resolve())
         })
     }
 }, 1000)
