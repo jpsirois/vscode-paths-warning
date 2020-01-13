@@ -3,11 +3,9 @@ const debounce = require('lodash.debounce')
 
 const COLORS_CONFIG = 'workbench.colorCustomizations'
 const PACKAGE_NAME = 'paths_warning'
-const stopEvent = new vscode.EventEmitter()
 
 let config = {}
 let outputChannel
-let extFilesList = []
 
 async function activate() {
     await readConfig()
@@ -21,27 +19,25 @@ async function activate() {
         debounce(async function (e) {
             if (e.focused) {
                 await checkForEditor()
-            } else {
-                stopEvent.fire()
             }
-        }, 150)
+        }, 100)
     )
 
     // on file change/close
     vscode.window.onDidChangeActiveTextEditor(
         debounce(async function (editor) {
             await checkForEditor(editor)
-        }, 150)
+        }, 100)
     )
 
     // on config change
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-        if (e.affectsConfiguration(`${PACKAGE_NAME}.exclude`)) {
-            await checkForEditor()
+        if (e.affectsConfiguration(PACKAGE_NAME)) {
+            await readConfig()
         }
 
-        if (e.affectsConfiguration(`${PACKAGE_NAME}.styles`)) {
-            await readConfig()
+        if (e.affectsConfiguration(`${PACKAGE_NAME}.exclude`)) {
+            await checkForEditor()
         }
 
         if (e.affectsConfiguration(`${PACKAGE_NAME}.debug`)) {
@@ -113,14 +109,11 @@ async function checkForEditor(editor = vscode.window.activeTextEditor) {
                     msg = 'External Path'
                 }
             }
-        } else {
-            stopEvent.fire()
         }
 
-        // show warning
-        msg
-            ? showMsgWithProgress(`WARNING: You're Viewing A File From "${msg}" !`)
-            : stopEvent.fire()
+        if (msg) {
+            vscode.window.showInformationMessage(`WARNING: You're Viewing A File From "${msg}" !`)
+        }
 
         return applyStyles(!!(msg))
     } catch (error) {
@@ -137,12 +130,9 @@ async function applyStyles(add = true) {
     let currentStyles = await getCurrentStyles()
     let data = {}
 
-    if (add) {
-        data = Object.assign({}, currentStyles, config.styles)
-    } else {
-        extFilesList = []
-        data = await getDiffProps(currentStyles)
-    }
+    data = add
+        ? Object.assign({}, currentStyles, config.styles)
+        : await getDiffProps(currentStyles)
 
     return vscode.workspace.getConfiguration().update(COLORS_CONFIG, data, true)
 }
@@ -161,57 +151,9 @@ function getDiffProps(currentStyles) {
     }).then((data) => data)
 }
 
-let showMsgWithProgress = debounce(function (msg) {
-    let stop = false
-
-    if (!hasNotif()) {
-        return vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: msg,
-            cancellable: true
-        }, async (progress, token) => {
-            for (let i = 1; i <= 11; i++) {
-                stopEvent.event((e) => {
-                    stop = true
-                })
-
-                if (stop) {
-                    break
-                } else {
-                    await new Promise((resolve) => {
-                        setTimeout(() => {
-                            progress.report({ increment: 10 })
-                            resolve()
-                        }, 1000)
-                    })
-                }
-            }
-
-            return new Promise((resolve) => resolve())
-        })
-    }
-}, 1000)
-
-function hasNotif() {
-    try {
-        let check = false
-        let name = vscode.window.activeTextEditor.document.fileName
-
-        if (extFilesList.includes(name)) {
-            check = true
-        } else {
-            extFilesList.push(name)
-        }
-
-        return check
-    } catch (error) {
-    }
-}
-
 exports.activate = activate
 
 function deactivate() {
-    stopEvent.dispose()
 }
 
 module.exports = {

@@ -41,3 +41,8 @@
 ## 0.1.2
 
 - fix double notifs
+
+## 0.1.5
+
+- revert back to normal notifs 😞
+- fix update on config change
