@@ -61,7 +61,6 @@ function resetOutputChannel() {
 
     if (config.debug) {
         outputChannel = vscode.window.createOutputChannel("Paths Warning")
-        outputChannel.show(true)
     }
 }
 
@@ -88,6 +87,7 @@ async function checkForEditor(editor = vscode.window.activeTextEditor) {
 
             // debug
             if (config.debug) {
+                outputChannel.show(true)
                 // outputChannel.clear()
                 showDebugMsg(`root: ${root}`)
                 showDebugMsg(`name: ${fileName}`)
