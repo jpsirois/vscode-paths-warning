@@ -123,8 +123,6 @@ function checkForExclusions(fileName) {
 }
 
 async function applyStyles(add = true) {
-    console.log('helo')
-
     let currentStyles = await getCurrentStyles()
     let data = {}
 
