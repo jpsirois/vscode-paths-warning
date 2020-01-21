@@ -15,20 +15,16 @@ async function activate() {
     await checkForEditor()
 
     // on window change
-    vscode.window.onDidChangeWindowState(
-        debounce(async function (e) {
-            if (e.focused) {
-                await checkForEditor()
-            }
-        }, 100)
-    )
+    vscode.window.onDidChangeWindowState(async (e) => {
+        if (e.focused) {
+            await checkForEditor()
+        }
+    })
 
     // on file change/close
-    vscode.window.onDidChangeActiveTextEditor(
-        debounce(async function (editor) {
-            await checkForEditor(editor)
-        }, 100)
-    )
+    vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+        await checkForEditor(editor)
+    })
 
     // on config change
     vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -77,7 +73,7 @@ async function getCurrentStyles() {
     return getConfig(COLORS_CONFIG)
 }
 
-async function checkForEditor(editor = vscode.window.activeTextEditor) {
+const checkForEditor = debounce(async function (editor = vscode.window.activeTextEditor) {
     let msg = null
 
     try {
@@ -118,7 +114,7 @@ async function checkForEditor(editor = vscode.window.activeTextEditor) {
         return applyStyles(!!(msg))
     } catch (error) {
     }
-}
+}, 0.5 * 1000)
 
 function checkForExclusions(fileName) {
     let exclude = config.exclude
@@ -127,6 +123,8 @@ function checkForExclusions(fileName) {
 }
 
 async function applyStyles(add = true) {
+    console.log('helo')
+
     let currentStyles = await getCurrentStyles()
     let data = {}
 
