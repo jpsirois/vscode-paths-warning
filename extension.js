@@ -56,7 +56,7 @@ function resetOutputChannel() {
     }
 
     if (config.debug) {
-        outputChannel = vscode.window.createOutputChannel("Paths Warning")
+        outputChannel = vscode.window.createOutputChannel('Paths Warning')
     }
 }
 
@@ -79,7 +79,7 @@ const checkForEditor = debounce(async function (editor = vscode.window.activeTex
     try {
         if (editor) {
             const root = vscode.workspace.workspaceFolders[0].uri.fsPath || ''
-            const { fileName } = editor.document
+            const {fileName} = editor.document
 
             // debug
             if (config.debug) {
@@ -107,7 +107,7 @@ const checkForEditor = debounce(async function (editor = vscode.window.activeTex
             }
         }
 
-        if (msg) {
+        if (msg && config.showNotification) {
             vscode.window.showInformationMessage(`WARNING: You're Viewing A File From "${msg}" !`)
         }
 

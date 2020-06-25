@@ -2,7 +2,7 @@
     "name": "vscode-paths-warning",
     "displayName": "Paths Warning",
     "description": "Show a warning message when opening a file under (vendor/node_modules/outside the workspace)",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "publisher": "ctf0",
     "repository": "https://github.com/ctf0/vscode-paths-warning",
     "icon": "img/logo.png",
@@ -53,6 +53,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "use this to get filename in output"
+                },
+                "paths_warning.showNotification": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "whether to show the notification or not ?"
                 }
             }
         }

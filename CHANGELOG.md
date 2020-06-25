@@ -46,3 +46,7 @@
 
 - revert back to normal notifs 😞
 - fix update on config change
+
+## 0.1.8
+
+- add option to disable showing notifications
