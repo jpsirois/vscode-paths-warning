@@ -2,7 +2,7 @@ const vscode = require('vscode')
 const debounce = require('lodash.debounce')
 
 const COLORS_CONFIG = 'workbench.colorCustomizations'
-const PACKAGE_NAME = 'paths_warning'
+const PACKAGE_NAME = 'pathsWarning'
 
 let config = {}
 let outputChannel

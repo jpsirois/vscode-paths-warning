@@ -50,3 +50,7 @@
 ## 0.1.8
 
 - add option to disable showing notifications
+
+## 0.1.9
+
+- fix package settings name

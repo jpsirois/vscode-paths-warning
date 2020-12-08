@@ -2,7 +2,7 @@
     "name": "vscode-paths-warning",
     "displayName": "Paths Warning",
     "description": "Show a warning message when opening a file under (vendor/node_modules/outside the workspace)",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "publisher": "ctf0",
     "repository": "https://github.com/ctf0/vscode-paths-warning",
     "icon": "img/logo.png",
@@ -21,12 +21,12 @@
             "type": "object",
             "title": "Paths Warning",
             "properties": {
-                "paths_warning.styles": {
+                "pathsWarning.styles": {
                     "type": "object",
                     "default": {},
                     "description": "apply styles to editor when switching to a file under vendor/node_modules or from outside the workspace"
                 },
-                "paths_warning.include": {
+                "pathsWarning.include": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -38,7 +38,7 @@
                     "uniqueItems": true,
                     "description": "apply styles when opening a file inside"
                 },
-                "paths_warning.exclude": {
+                "pathsWarning.exclude": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -49,12 +49,12 @@
                     "uniqueItems": true,
                     "description": "dont apply styles when opening a file with a path that contains"
                 },
-                "paths_warning.debug": {
+                "pathsWarning.debug": {
                     "type": "boolean",
                     "default": false,
                     "description": "use this to get filename in output"
                 },
-                "paths_warning.showNotification": {
+                "pathsWarning.showNotification": {
                     "type": "boolean",
                     "default": false,
                     "description": "whether to show the notification or not ?"
@@ -63,9 +63,9 @@
         }
     },
     "devDependencies": {
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^8.10.25",
-        "typescript": "^3.6.2",
+        "@types/mocha": "^8.0.4",
+        "@types/node": "^14.14.10",
+        "typescript": "^4.1.2",
         "vscode": "^1.1.36"
     },
     "dependencies": {
