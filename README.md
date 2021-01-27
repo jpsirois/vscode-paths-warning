@@ -1,4 +1,4 @@
-Show a warning message when switching to a file under any of `workspace-root/paths_warning.include` or outside of the workspace.
+Show a warning message when switching to a file under any of `workspace-root/pathsWarning.include` or outside of the workspace.
 
 ## Config
 
