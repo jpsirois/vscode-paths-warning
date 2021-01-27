@@ -13,7 +13,9 @@ Show a warning message when switching to a file under any of `workspace-root/pat
 ],
 "pathsWarning.exclude": [
     "Code - Insiders",
-]
+],
+"pathsWarning.showNotification": true,
+"pathsWarning.debug": false
 ```
 
 ## Notes
