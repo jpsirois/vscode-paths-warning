@@ -3,15 +3,15 @@ Show a warning message when switching to a file under any of `workspace-root/pat
 ## Config
 
 ```json
-"paths_warning.styles": {
+"pathsWarning.styles": {
     "activityBar.background": "#f3002b50",
     "statusBar.background": "#f3002b50",
 },
-"paths_warning.include": [
+"pathsWarning.include": [
     "vendor",
     "node_modules"
 ],
-"paths_warning.exclude": [
+"pathsWarning.exclude": [
     "Code - Insiders",
 ]
 ```
